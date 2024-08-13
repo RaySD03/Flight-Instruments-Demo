@@ -22,7 +22,7 @@ def create_labeled_widget(widget, label_text):
 def main():
     app = QtWidgets.QApplication(sys.argv)
     main_window = QtWidgets.QMainWindow()
-    main_window.setWindowTitle("Aero Display")
+    main_window.setWindowTitle("Flight Instruments")
     main_window.setGeometry(100, 100, 1000, 800)
     main_window.setStyleSheet("background-color: black;")
 
