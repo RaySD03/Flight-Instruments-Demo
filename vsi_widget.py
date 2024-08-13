@@ -47,8 +47,8 @@ class VerticalSpeedIndicatorWidget(QtWidgets.QWidget):
         }
         for angle, text in main_positions.items():
             rad_angle = math.radians(angle - 90)
-            x1 = int(180 + 135 * math.cos(rad_angle))
-            y1 = int(180 + 135 * math.sin(rad_angle))
+            x1 = int(180 + 144 * math.cos(rad_angle))
+            y1 = int(180 + 144 * math.sin(rad_angle))
             x2 = int(180 + 150 * math.cos(rad_angle))
             y2 = int(180 + 150 * math.sin(rad_angle))
             painter.setPen(QtGui.QPen(QtGui.QColor("#FFFFFF"), 5))
