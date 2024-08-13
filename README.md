@@ -4,8 +4,7 @@ altitude indicator, compass, altimeter, and vertical speed indicator.
 Project Requirements:
 - Python
 - PyQt5 library
-
-UI: <br></br>
+<br></br>
 
 https://github.com/user-attachments/assets/a72ce706-4436-4638-847f-71cc9c9391ac
 
