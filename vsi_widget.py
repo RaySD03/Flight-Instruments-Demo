@@ -8,9 +8,9 @@ class VerticalSpeedIndicatorWidget(QtWidgets.QWidget):
         self.direction = 1  # 1 for increasing, -1 for decreasing
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.update_speed)
-        self.timer.start(500)  # Update every 500 milliseconds (0.5 second)
+        self.timer.start(500)  # Update every 500 milliseconds
         self.setFixedSize(360, 360)
-        self.setContentsMargins(0, 0, 0, 0)  # Set margins to zero
+        self.setContentsMargins(0, 0, 0, 0)
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
@@ -28,13 +28,28 @@ class VerticalSpeedIndicatorWidget(QtWidgets.QWidget):
         painter.setClipPath(path)
         painter.fillRect(self.rect(), QtGui.QColor("#151515"))
 
-        # Draw the ellipse with the new background color inside
+        # Draw the outer ellipse with gradient background
+        gradient = QtGui.QRadialGradient(180, 180, 180)
+        gradient.setColorAt(0, QtGui.QColor("#555"))
+        gradient.setColorAt(1, QtGui.QColor("#222"))
+        painter.setBrush(gradient)
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.drawEllipse(14, 14, 332, 332)
+
+        # Draw the main ellipse with the gradient
         ellipse_path = QtGui.QPainterPath()
         ellipse_path.addEllipse(26, 26, 308, 308)
         painter.setClipPath(ellipse_path)
-        painter.fillRect(26, 26, 308, 308, QtGui.QColor("#2F3035"))
+
+        gradient = QtGui.QRadialGradient(180, 180, 154)
+        gradient.setColorAt(1, QtGui.QColor("#1D1E21"))
+        gradient.setColorAt(0.9, QtGui.QColor("#2F3035"))
+        painter.setBrush(gradient)
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.drawEllipse(26, 26, 308, 308)
+
         painter.setBrush(QtCore.Qt.NoBrush)
-        painter.setPen(QtGui.QPen(QtGui.QColor("#454545"), 5))
+        painter.setPen(QtGui.QPen(QtGui.QColor("#222"), 5))
         painter.drawEllipse(26, 26, 308, 308)
 
     def draw_speed_markings(self, painter):
@@ -47,20 +62,20 @@ class VerticalSpeedIndicatorWidget(QtWidgets.QWidget):
         }
         for angle, text in main_positions.items():
             rad_angle = math.radians(angle - 90)
-            x1 = int(180 + 144 * math.cos(rad_angle))
-            y1 = int(180 + 144 * math.sin(rad_angle))
+            x1 = int(180 + 136 * math.cos(rad_angle))
+            y1 = int(180 + 136 * math.sin(rad_angle))
             x2 = int(180 + 150 * math.cos(rad_angle))
             y2 = int(180 + 150 * math.sin(rad_angle))
-            painter.setPen(QtGui.QPen(QtGui.QColor("#FFFFFF"), 5))
+            painter.setPen(QtGui.QPen(QtGui.QColor("#B3C1C9"), 5))
             painter.drawLine(x1, y1, x2, y2)
 
             # Draw numbers
-            num_x = int(180 + 120 * math.cos(rad_angle))
-            num_y = int(180 + 120 * math.sin(rad_angle))
+            num_x = int(180 + 112 * math.cos(rad_angle))
+            num_y = int(180 + 112 * math.sin(rad_angle))
             font = painter.font()
-            font.setFamily("Courier")  # Set font to Courier
-            font.setPointSize(22)
-            font.setBold(True)  # Make numbers bold
+            font.setFamily("Arial")
+            font.setPointSize(18) 
+            font.setBold(True) 
             painter.setFont(font)
             painter.drawText(num_x - 20, num_y - 20, 40, 40, QtCore.Qt.AlignCenter, text)
 
@@ -72,50 +87,68 @@ class VerticalSpeedIndicatorWidget(QtWidgets.QWidget):
                 y1 = int(180 + 140 * math.sin(angle))
                 x2 = int(180 + 150 * math.cos(angle))
                 y2 = int(180 + 150 * math.sin(angle))
-                painter.setPen(QtGui.QPen(QtGui.QColor("#FFFFFF"), 2))
+                painter.setPen(QtGui.QPen(QtGui.QColor("#B3C1C9"), 2))
                 painter.drawLine(x1, y1, x2, y2)
 
     def draw_digital_display(self, painter):
-        rect = QtCore.QRect(110, 150, 140, 60)
-        painter.setPen(QtGui.QPen(QtGui.QColor("#FFFFFF"), 2))
-        painter.setBrush(QtGui.QColor("#000000"))
-        painter.drawRect(rect)
+        # Define the rectangle and the half-circle path
+        rect = QtCore.QRect(152, 126, 208, 100)
+        path = QtGui.QPainterPath()
+        path.moveTo(152, 126)  # Start at the top-left corner of the rectangle
+        path.arcTo(102, 126, 100, 100, 90, 180)  # Draw the half-circle
+        path.lineTo(152, 226)  # Draw the left side of the rectangle
+        path.lineTo(360, 226)  # Draw the bottom line of the rectangle
+        path.lineTo(360, 126)  # Draw the right side of the rectangle
+        path.closeSubpath() 
 
-        font = painter.font()
-        font.setFamily("Courier")
-        font.setPointSize(24)
-        font.setBold(True)
+        # Draw the path
+        painter.setPen(QtGui.QPen(QtGui.QColor("#aaa"), 2))
+        painter.setBrush(QtGui.QColor("#15161C"))
+        painter.drawPath(path)
+
+        # Draw the text inside the path
+        font = QtGui.QFont("Arial", 22, QtGui.QFont.Bold)
         painter.setFont(font)
-        painter.drawText(rect, QtCore.Qt.AlignCenter, f"{self.vertical_speed:.1f} m/s")
+        painter.setPen(QtGui.QPen(QtGui.QColor("#CBEAFB")))
+
+        # Adjust the text position by moving it to the left
+        text_rect = rect.adjusted(-30, 0, -30, 0)  # Move 30 pixels to the left
+        painter.drawText(text_rect, QtCore.Qt.AlignCenter, f"{self.vertical_speed:.1f} m/s")
+
+        # Add the "VARIO" label
+        vario_font = QtGui.QFont("Arial", 8, QtGui.QFont.Bold) 
+        painter.setFont(vario_font)
+        painter.setPen(QtGui.QPen(QtGui.QColor("#CBEAFB")))
+        painter.drawText(rect.adjusted(10, 10, 0, 0), QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop, "VARIO")
 
     def draw_speed_triangle(self, painter):
         # Calculate the angle for the current vertical speed
-        angle = 270 + (self.vertical_speed * 12)  # 12 degrees per m/s indicator
+        angle = 270 + (self.vertical_speed * 12)  # 12 degrees per m/s
         rad_angle = math.radians(angle - 90)
         x = int(180 + 150 * math.cos(rad_angle))
         y = int(180 + 150 * math.sin(rad_angle))
 
-        # Draw the red triangle
-        painter.setPen(QtCore.Qt.NoPen)
-        painter.setBrush(QtGui.QBrush(QtGui.QColor("#FF0000")))
+        # Define the trapezoid points
+        trapezoid = QtGui.QPolygonF()
+        trapezoid.append(QtCore.QPointF(x - 4, y))
+        trapezoid.append(QtCore.QPointF(x + 4, y))
+        trapezoid.append(QtCore.QPointF(x + 8, y + 30))
+        trapezoid.append(QtCore.QPointF(x - 8, y + 30))
 
-        # Define the triangle points
-        triangle = QtGui.QPolygonF()
-        triangle.append(QtCore.QPointF(x, y))
-        triangle.append(QtCore.QPointF(x - 10, y + 20))
-        triangle.append(QtCore.QPointF(x + 10, y + 20))
-
-        # Rotate the triangle to match the angle
+        # Rotate the trapezoid to match the angle
         transform = QtGui.QTransform()
         transform.translate(x, y)
         transform.rotate(angle)
         transform.translate(-x, -y)
-        triangle = transform.map(triangle)
+        trapezoid = transform.map(trapezoid)
 
-        painter.drawPolygon(triangle)
+        # Draw the trapezoid with transparent fill and red outline
+        painter.setBrush(QtCore.Qt.NoBrush)
+        painter.setPen(QtGui.QPen(QtGui.QColor("#EA5132"), 4))
+        painter.drawPolygon(trapezoid)
 
     def update_speed(self):
-        # Logic to update vertical speed (For demo)
+        # Logic to update vertical speed
         if self.vertical_speed > 5:
             self.direction = -1
         elif self.vertical_speed < -5:
