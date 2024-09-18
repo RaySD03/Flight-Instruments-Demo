@@ -6,7 +6,9 @@ Project Requirements:
 - PyQt5 library
 <br></br>
 
-https://github.com/user-attachments/assets/984b10e8-bba7-4946-a5b2-a12ef6263e1c
+https://github.com/user-attachments/assets/6d567000-0298-4275-93d1-7297f640e7e5
+
+
 
 
 
