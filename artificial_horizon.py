@@ -7,7 +7,7 @@ class ArtificialHorizon(QtWidgets.QWidget):
         self.sky_color = sky_color
         self.ground_color = ground_color
         self.roll_angle = 0
-        self.pitch_angle = 0  # Add pitch angle for demo
+        self.pitch_angle = 0  # Add pitch angle for demonstration
         self.pitch_direction = 1  # Add pitch direction for reversing
         self.rotation_state = 0  # State of rotation
         self.timer = QtCore.QTimer(self)
@@ -82,19 +82,22 @@ class ArtificialHorizon(QtWidgets.QWidget):
         center_x = width // 2
         center_y = height // 2
 
-        # Define rectangles for the sky and ground
+        # Calculate vertical offset based on pitch angle and invert it
+        pitch_offset = int(-self.pitch_angle * height / 90)  # Adjust the divisor for sensitivity
+
+        # Define rectangles for the sky and ground with pitch offset
         sky_points = [
-            QtCore.QPoint(center_x - width, center_y - height),
-            QtCore.QPoint(center_x + width, center_y - height),
-            QtCore.QPoint(center_x + width, center_y),
-            QtCore.QPoint(center_x - width, center_y)
+            QtCore.QPoint(center_x - width, center_y - height + pitch_offset),
+            QtCore.QPoint(center_x + width, center_y - height + pitch_offset),
+            QtCore.QPoint(center_x + width, center_y + pitch_offset),
+            QtCore.QPoint(center_x - width, center_y + pitch_offset)
         ]
 
         ground_points = [
-            QtCore.QPoint(center_x - width, center_y),
-            QtCore.QPoint(center_x + width, center_y),
-            QtCore.QPoint(center_x + width, center_y + height),
-            QtCore.QPoint(center_x - width, center_y + height)
+            QtCore.QPoint(center_x - width, center_y + pitch_offset),
+            QtCore.QPoint(center_x + width, center_y + pitch_offset),
+            QtCore.QPoint(center_x + width, center_y + height + pitch_offset),
+            QtCore.QPoint(center_x - width, center_y + height + pitch_offset)
         ]
 
         # Rotate points
@@ -111,13 +114,23 @@ class ArtificialHorizon(QtWidgets.QWidget):
         rotated_sky_points = [rotate_point(point, roll_radians, center_x, center_y) for point in sky_points]
         rotated_ground_points = [rotate_point(point, roll_radians, center_x, center_y) for point in ground_points]
 
-        # Draw the sky
-        painter.setBrush(QtGui.QColor(self.sky_color))
+        # Create gradient for the sky
+        sky_gradient = QtGui.QLinearGradient(0, center_y - height + pitch_offset, 0, center_y + pitch_offset)
+        sky_gradient.setColorAt(0, QtGui.QColor("#4193F9"))  # Top color
+        sky_gradient.setColorAt(1, QtGui.QColor("#87CEEB"))  # Bottom color
+
+        # Create gradient for the ground
+        ground_gradient = QtGui.QLinearGradient(0, center_y + pitch_offset, 0, center_y + height + pitch_offset)
+        ground_gradient.setColorAt(0, QtGui.QColor("#975B19"))  # Top color
+        ground_gradient.setColorAt(1, QtGui.QColor("#654321"))  # Bottom color
+
+        # Draw the sky with gradient
+        painter.setBrush(sky_gradient)
         painter.setPen(QtCore.Qt.NoPen)
         painter.drawPolygon(QtGui.QPolygon(rotated_sky_points))
 
-        # Draw the ground
-        painter.setBrush(QtGui.QColor(self.ground_color))
+        # Draw the ground with gradient
+        painter.setBrush(ground_gradient)
         painter.drawPolygon(QtGui.QPolygon(rotated_ground_points))
 
         # Draw the separator line between sky and ground
@@ -155,7 +168,7 @@ class ArtificialHorizon(QtWidgets.QWidget):
         square_size = 10
         painter.drawRect(center_x - square_size // 2, center_y - square_size // 2, square_size, square_size)
 
-        # Update roll angle and pitch angle (for demon)
+        # Update roll angle and pitch angle for demonstration
         if self.rotation_state == 1:  # Rotate to +20 degrees
             self.roll_angle += 0.2
             if self.roll_angle >= 20:
@@ -179,7 +192,7 @@ class ArtificialHorizon(QtWidgets.QWidget):
         ellipse_radius = 160  # Half of the ellipse size = (320 / 2)
         fade_start_distance = ellipse_radius * 0.55  # Start fading at 55% of the radius
         for i, pitch in enumerate(pitch_angles):
-            y = int(center_y - (pitch + self.pitch_angle) * 6)  # Controls vertical spacing between lines of the ladder
+            y = int(center_y - (pitch + self.pitch_angle) * 6)  # Controls vertical spacing between lines
             distance_from_center = abs(y - center_y)
             if distance_from_center < fade_start_distance:
                 fade_factor = 1
@@ -190,12 +203,12 @@ class ArtificialHorizon(QtWidgets.QWidget):
 
             painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, opacity), 2))
             font = QtGui.QFont()
-            font.setPointSize(12)
+            font.setPointSize(12)  # Increase font size
             painter.setFont(font)
-            if pitch % 10 == 0:  # Long lines with degree labels
+            if pitch % 10 == 0:  # Long lines with labels
                 painter.drawLine(center_x - line_length, y, center_x + line_length, y)
-                painter.drawText(center_x - 64, y + 5, f"{pitch:>3}")
-                painter.drawText(center_x + 40, y + 5, f"{pitch:<3}")
+                painter.drawText(center_x - 64, y + 5, f"{pitch:>3}")  # Move numbers closer
+                painter.drawText(center_x + 40, y + 5, f"{pitch:<3}")  # Move numbers closer
             elif pitch % 5 == 0:  # Medium lines
                 painter.drawLine(center_x - int(line_length // 1.5), y, center_x + int(line_length // 1.5), y)
             else:  # Short lines
