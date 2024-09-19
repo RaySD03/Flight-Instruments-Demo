@@ -1,5 +1,5 @@
 This is a demo version of flight instruments consisting of: 
-altitude indicator, compass, altimeter, and vertical speed indicator.
+artificial horizon, compass, altimeter, and vertical speed indicator.
 
 Project Requirements:
 - Python
