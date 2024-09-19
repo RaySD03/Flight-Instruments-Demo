@@ -116,8 +116,8 @@ class ArtificialHorizon(QtWidgets.QWidget):
 
         # Create gradient for the sky
         sky_gradient = QtGui.QLinearGradient(0, center_y - height + pitch_offset, 0, center_y + pitch_offset)
-        sky_gradient.setColorAt(0, QtGui.QColor("#4193F9"))  # Top color
-        sky_gradient.setColorAt(1, QtGui.QColor("#87CEEB"))  # Bottom color
+        sky_gradient.setColorAt(0, QtGui.QColor("#2A6EC9"))  # Top color
+        sky_gradient.setColorAt(1, QtGui.QColor("#7CB5EB"))  # Bottom color
 
         # Create gradient for the ground
         ground_gradient = QtGui.QLinearGradient(0, center_y + pitch_offset, 0, center_y + height + pitch_offset)
@@ -140,8 +140,8 @@ class ArtificialHorizon(QtWidgets.QWidget):
         # Draw pitch lines and pitch ladder
         self.draw_pitch_lines_and_ladder(painter, center_x, center_y)
 
-        # Draw roll indicator
-        self.draw_roll_indicator(painter, center_x, center_y)
+        # Draw bank angle arc with tick marks
+        self.draw_bank_angle_arc(painter, center_x, center_y)
 
         # Define the L-shaped plane outline points
         left_L = [
@@ -187,17 +187,118 @@ class ArtificialHorizon(QtWidgets.QWidget):
         if self.pitch_angle >= 30 or self.pitch_angle <= -30:
             self.pitch_direction *= -1
 
+    def draw_bank_angle_arc(self, painter, center_x, center_y):
+        # Draw the arc at the top of the container circle
+        arc_rect = QtCore.QRect(center_x - 145, center_y - 145, 290, 290)
+        painter.setPen(QtGui.QPen(QtGui.QColor("white"), 2))
+        painter.drawArc(arc_rect, 60 * 16, 60 * 16)  # Draw arc from -30 to +30 degrees
+
+        # Draw tick marks for bank angles (rotated rectangles)
+        for angle in range(-30, 31, 10):
+            tick_length = 14 if angle % 30 == 0 else 10  # Adjust rectangles' size
+            tick_angle = math.radians(angle - 90)  # Adjust angle to align with the top arc
+            x1 = center_x + 158 * math.cos(tick_angle)
+            y1 = center_y + 158 * math.sin(tick_angle)
+            x2 = center_x + (158 - tick_length) * math.cos(tick_angle)
+            y2 = center_y + (158 - tick_length) * math.sin(tick_angle)
+            
+            if angle == 0:
+                # Define points for the inverted yellow triangle
+                triangle_points = [
+                    QtCore.QPoint(int((x1 + x2) / 2), int(y2)),
+                    QtCore.QPoint(int((x1 + x2) / 2 - 8), int(y1)),
+                    QtCore.QPoint(int((x1 + x2) / 2 + 8), int(y1))
+                ]
+                painter.setPen(QtGui.QPen(QtGui.QColor("yellow"), 2))
+                painter.setBrush(QtCore.Qt.NoBrush)
+                painter.drawPolygon(QtGui.QPolygon(triangle_points))
+            else:
+                # Define the rectangle for the tick mark
+                rect_width = 6  # Width of the rectangle
+                painter.setPen(QtGui.QPen(QtGui.QColor("white"), 2))
+                rect_height = abs(y1 - y2)  # Height of the rectangle
+                rect_center_x = (x1 + x2) / 2
+                rect_center_y = (y1 + y2) / 2
+                
+                # Create the rectangle centered on the arc
+                rect = QtCore.QRectF(rect_center_x - rect_width / 2, rect_center_y - rect_height / 2, rect_width, rect_height)
+                
+                # Create a QTransform object to apply rotation
+                transform = QtGui.QTransform()
+                transform.translate(rect_center_x, rect_center_y)
+                transform.rotate(angle)
+                transform.translate(-rect_center_x, -rect_center_y)
+                
+                # Apply the transformation and draw the rectangle with no fill
+                painter.setTransform(transform)
+                painter.setBrush(QtCore.Qt.NoBrush)
+                painter.drawRect(rect)
+                painter.resetTransform()  # Reset transformation for the next tick mark
+
+        # Draw the moving trapezoid and triangle
+        triangle_angle = math.radians(-self.roll_angle - 90)  # Adjust angle to align with the top arc
+        triangle_x = int(center_x + 140 * math.cos(triangle_angle))
+        triangle_y = int(center_y + 140 * math.sin(triangle_angle))
+
+        # Define points for the inverted trapezoid
+        trapezoid_points = [
+            QtCore.QPoint(triangle_x - 12, triangle_y + 18),
+            QtCore.QPoint(triangle_x + 12, triangle_y + 18),
+            QtCore.QPoint(triangle_x + 16, triangle_y + 25),
+            QtCore.QPoint(triangle_x - 16, triangle_y + 25)
+        ]
+
+        # Define points for the triangle
+        triangle_points = [
+            QtCore.QPoint(triangle_x, triangle_y),
+            QtCore.QPoint(triangle_x - 10, triangle_y + 14),
+            QtCore.QPoint(triangle_x + 10, triangle_y + 14)
+        ]
+
+        # Draw the trapezoid and triangle with yellow outline and no fill
+        painter.setPen(QtGui.QPen(QtGui.QColor("yellow"), 2))
+        painter.setBrush(QtCore.Qt.NoBrush)
+        painter.drawPolygon(QtGui.QPolygon(trapezoid_points))
+        painter.drawPolygon(QtGui.QPolygon(triangle_points))
+
+        # Draw the horizontal yellow line
+        line_y = triangle_y + 34  # Adjust the position as needed
+        painter.setPen(QtGui.QPen(QtGui.QColor("yellow"), 2))
+        painter.drawLine(center_x - 150, line_y, center_x + 150, line_y)
+
+        # Draw the horizontal white line
+        white_line_y = center_y + 106  # Adjust the position as needed
+        painter.setPen(QtGui.QPen(QtGui.QColor("white"), 2))
+        painter.drawLine(center_x - 150, white_line_y, center_x + 150, white_line_y)
+
     def draw_pitch_lines_and_ladder(self, painter, center_x, center_y):
         pitch_angles = [-30, -27.5, -25, -22.5, -20, -17.5, -15, -12.5, -10, -7.5, -5, -2.5, 0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30]
         ellipse_radius = 160  # Half of the ellipse size = (320 / 2)
         fade_start_distance = ellipse_radius * 0.55  # Start fading at 55% of the radius
+
+        # Define the top and bottom limits for the pitch ladder
+        top_limit = center_y - 100  # Adjust this value as needed
+        bottom_limit = center_y + 100  # Adjust this value as needed
+
         for i, pitch in enumerate(pitch_angles):
-            y = int(center_y - (pitch + self.pitch_angle) * 6)  # Controls vertical spacing between lines
+            y = int(center_y - (pitch + self.pitch_angle) * 8)  # Controls vertical spacing between lines
+
+            # Skip drawing lines outside the top and bottom limits
+            if y < top_limit or y > bottom_limit:
+                continue
+
             distance_from_center = abs(y - center_y)
             if distance_from_center < fade_start_distance:
                 fade_factor = 1
             else:
                 fade_factor = max(0, 1 - (distance_from_center - fade_start_distance) / (ellipse_radius - fade_start_distance))
+
+            # Adjust fade factor based on proximity to the top and bottom limits
+            if y < top_limit + 20:
+                fade_factor *= (y - top_limit) / 20
+            elif y > bottom_limit - 20:
+                fade_factor *= (bottom_limit - y) / 20
+
             line_length = int(34 * fade_factor)  # Pitch line length
             opacity = int(255 * fade_factor)
 
@@ -213,11 +314,6 @@ class ArtificialHorizon(QtWidgets.QWidget):
                 painter.drawLine(center_x - int(line_length // 1.5), y, center_x + int(line_length // 1.5), y)
             else:  # Short lines
                 painter.drawLine(center_x - line_length // 2, y, center_x + line_length // 2, y)
-
-    def draw_roll_indicator(self, painter, center_x, center_y):
-        painter.setPen(QtGui.QPen(QtCore.Qt.white, 2))
-        painter.drawArc(center_x - 150, center_y - 150, 300, 300, 16 * 45, 16 * 90)  # Draw arc for roll indicator
-        painter.drawLine(center_x, center_y - 150, center_x, center_y - 140)  # Draw center tick mark
 
     def toggle_rotation(self):
         self.rotation_state = 1  # Start the rotation cycle
